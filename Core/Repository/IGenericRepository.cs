@@ -15,5 +15,6 @@ namespace Core.Repository
         void Remove(T entity);
         Task<bool> SaveChangesAsync();
         bool EntityExists(int id);
+        Task<int> CountAsync(ISpecificationRepository<T> spec);
     }
 }

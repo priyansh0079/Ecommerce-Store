@@ -1,3 +1,4 @@
+using API.RequestHelpers;
 using Core.Entities;
 using Core.Repository;
 using Core.Specifications;
@@ -12,13 +13,17 @@ namespace API.Controllers
         [HttpGet]
         [Route("list")]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
-            string? brand, string? type, string? sort)
+            [FromQuery] ProductSpecParams productSpec)
         {
-            ProductSpecification spec = new (brand, type, sort);
+            ProductSpecification spec = new (productSpec);
 
             IReadOnlyList<Product> products = await _repo.ListAsync(spec);
+            int count = await _repo.CountAsync(spec);
 
-            return Ok(products);
+            Pagination<Product> pagination = new (productSpec.PageSize,
+             productSpec.PageIndex, count, products);
+
+            return Ok(pagination);
         }
 
         [HttpGet]
