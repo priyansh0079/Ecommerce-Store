@@ -1,6 +1,6 @@
+using API.Middleware;
 using API.RequestHelpers;
 using Core.Entities;
-using Core.Repository;
 using Core.Specifications;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,94 +8,63 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ProductController(IGenericRepository<Product> _repo): ControllerBase
+    public class ProductController(ProductMiddleware _productServices): ControllerBase
     {
         [HttpGet]
         [Route("list")]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
+        public async Task<ActionResult<ApiBaseResponse<Pagination<Product>>>> GetProducts(
             [FromQuery] ProductSpecParams productSpec)
         {
-            ProductSpecification spec = new (productSpec);
-
-            IReadOnlyList<Product> products = await _repo.ListAsync(spec);
-            int count = await _repo.CountAsync(spec);
-
-            Pagination<Product> pagination = new (productSpec.PageSize,
-             productSpec.PageIndex, count, products);
-
-            return Ok(pagination);
+            ApiBaseResponse<Pagination<Product>> products = await _productServices.GetProducts(productSpec);
+            return products;
         }
 
         [HttpGet]
         [Route("get")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<ApiBaseResponse<Product>>> GetProduct(int id)
         { 
-            Product? product = await _repo.GetByIdAsync(id);
-            if (product == null) return NotFound();
+            ApiBaseResponse<Product> product = await _productServices.GetProduct(id);
             return product;
         }
 
         [HttpGet]
         [Route("brands")]
-        public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
+        public async Task<ActionResult<ApiBaseResponse<IReadOnlyList<string>>>> GetBrands()
         {
-            BrandListSpecification spec = new(); 
-
-            return Ok(await _repo.ListAsync(spec));
+            ApiBaseResponse<IReadOnlyList<string>> brands = await _productServices.GetBrands();
+            return brands; 
         }
 
         [HttpGet]
         [Route("types")]
-        public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
+        public async Task<ActionResult<ApiBaseResponse<IReadOnlyList<string>>>> GetTypes()
         {
-            TypeListSpecification spec = new();
-
-            return Ok(await _repo.ListAsync(spec));
+            ApiBaseResponse<IReadOnlyList<string>> types = await _productServices.GetTypes();
+            return types;
         }
 
         [HttpPost]
         [Route("create")]
-        public async Task<ActionResult<Product>> CreateProduct(Product product){
-            _repo.Add(product);
-
-            if (await _repo.SaveChangesAsync()){
-                return CreatedAtAction("GetProduct", new { id = product.Id }, product);
-            }
-
-            return BadRequest("Product not created");
+        public async Task<ActionResult<ApiBaseResponse<Product>>> CreateProduct(Product product)
+        {
+            ApiBaseResponse<Product> response = await _productServices.CreateProduct(product);
+            return response;
         }
 
         [HttpPut]
         [Route("update")]
-        public async Task<ActionResult> UpdateProduct(int id, Product product){
-            if (product.Id != id || !_repo.EntityExists(id))
-             return BadRequest("Can't update this product");
-
-            _repo.Update(product);
-
-            if (await _repo.SaveChangesAsync()){
-                return NoContent();
-            }
-
-            return BadRequest("Product not updated");
+        public async Task<ActionResult<ApiBaseResponse<bool>>> UpdateProduct(int id, Product product)
+        {
+            ApiBaseResponse<bool> response = await _productServices.UpdateProduct(id, product);
+            return response;
         }
 
         [HttpDelete]
         [Route("delete")]
-        public async Task<ActionResult> DeleteProduct(int id){
-            Product? product = await _repo.GetByIdAsync(id);
-            if (product == null) return NotFound();
-
-            _repo.Remove(product);
-            if (await _repo.SaveChangesAsync()){
-                return NoContent();
-            }
-
-            return BadRequest("Product not deleted");
-        }
-
-        private bool ProductExists(int id){
-            return _repo.EntityExists(id);
+        public async Task<ActionResult<ApiBaseResponse<bool>>> DeleteProduct(int id)
+        {
+            ApiBaseResponse<bool> response = await _productServices.DeleteProduct(id);
+            return response;
         }
     }
 }
