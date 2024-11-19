@@ -40,6 +40,10 @@ export class ShopService {
     return this.http.get<ApiBaseResponse<Pagination<Product>>>(this.baseUrl + 'product/list', {params});
   }
 
+  getProduct(id: number){
+    return this.http.get<ApiBaseResponse<Product>>(this.baseUrl + 'product/get?id=' + id);
+  }
+
   getBrands(){
     if (this.brands.length > 0) return;
     return this.http.get<ApiBaseResponse<string[]>>(this.baseUrl + 'product/brands').subscribe({
