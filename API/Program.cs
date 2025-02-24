@@ -1,7 +1,10 @@
 using API.Middleware;
+using Core.Entities;
 using Core.Repository;
 using Infrastructure.Data;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +22,23 @@ builder.Services.AddDbContext<StoreContext>(opt =>
 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ProductMiddleware>();
+builder.Services.AddScoped<CartMiddleware>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddCors();
+builder.Services.AddSingleton<IConnectionMultiplexer>(config =>
+{
+    string? connectionString = builder.Configuration.GetConnectionString("Redis");
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new Exception("Redis connection string is missing");
+    }
+    ConfigurationOptions configuration = ConfigurationOptions.Parse(connectionString, true);
+    return ConnectionMultiplexer.Connect(configuration);
+});
+builder.Services.AddSingleton<ICartService, CartServices>();
+builder.Services.AddAuthorization(); 
+builder.Services.AddIdentityApiEndpoints<AppUser>()
+        .AddEntityFrameworkStores<StoreContext>();
 
 var app = builder.Build();
 
@@ -37,9 +55,11 @@ app.UseAuthorization();
 
 app.UseCors(builder => builder.AllowAnyHeader()
                             .AllowAnyMethod()
+                            .AllowCredentials()
                             .WithOrigins("http://localhost:4200",
                              "https://localhost:4200"));
 app.MapControllers();
+app.MapGroup("api").MapIdentityApi<AppUser>();
 
 try{
     using var scope = app.Services.CreateScope();

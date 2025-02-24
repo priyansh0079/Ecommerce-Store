@@ -1,0 +1,43 @@
+<div class="mx-auto max-w-4xl flex-1 space-y-2 w-full">
+    <div class="space-y-4 rounded-lg border-gray-900 p-4 bg-white shadow-md">
+        <p class="text-xl font-semibold">Order Summary</p>
+        <div class="space-y-4">
+            <div class="space-y-2">
+                <dl class="flex items-center justify-between gap-4">
+                    <dt class="font-medium text-gray-500">Subtotal</dt>
+                    <dt class="font-medium text-gray-900">
+                        {{cartService.totals()?.subtotal | currency:'INR'}}</dt>
+                </dl>
+                <dl class="flex items-center justify-between gap-4">
+                    <dt class="font-medium text-gray-500">Discount</dt>
+                    <dt class="font-medium text-green-500">-{{cartService.totals()?.discount | currency:'INR'}}</dt>
+                </dl>
+                <dl class="flex items-center justify-between gap-4">
+                    <dt class="font-medium text-gray-500">Delivery fee</dt>
+                    <dt class="font-medium text-gray-900">{{cartService.totals()?.shipping | currency:'INR'}}</dt>
+                </dl>
+                <dl class="flex items-center justify-between gap-4 border-t border-gray-200 pt-2">
+                    <dt class="font-medium text-gray-500">Total</dt>
+                    <dt class="font-medium text-gray-900">{{cartService.totals()?.total | currency:'INR'}}</dt>
+                </dl>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <button routerLink="/checkout" mat-flat-button>Checkout</button>
+                <button routerLink="/shop" mat-flat-button>Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+    <div class="space-y-4 rounded-lg border-gray-900 bg-white shadow-md">
+        <form class="space-y-2 flex flex-col p-2">
+            <label for="" class="block text-sm font-medium">
+                Do you have a voucher code?
+            </label>
+            <mat-form-field appearance="outline">
+                <mat-label>Voucher Code</mat-label>
+                <input type="text" matInput>
+            </mat-form-field>
+            <button mat-flat-button>Apply coupon code</button>
+        </form>
+    </div>
+</div>
